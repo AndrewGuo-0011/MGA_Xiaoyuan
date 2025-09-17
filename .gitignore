@@ -208,3 +208,6 @@ Desktop.ini
 
 # Linux
 *~
+
+# Qoder 工作区
+*.code-workspace
