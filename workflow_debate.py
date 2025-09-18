@@ -104,7 +104,7 @@ class AgentFactory:
                 stream=True,
                 enable_thinking=True,
             ),
-            formatter=DashScopeChatFormatter(),
+            formatter=DashScopeMultiAgentFormatter(),
             memory=memory,
         )
 
