@@ -94,7 +94,7 @@ class AgentFactory:
             memory=InMemoryMemory(),
         )
 
-    def create_agent_judge(self, memory: MemoryBase):
+    def create_agent_judge(self):
         return ReActAgent(
             name="评委",
             sys_prompt=self._get_judge_prompt(),
@@ -105,7 +105,7 @@ class AgentFactory:
                 enable_thinking=True,
             ),
             formatter=DashScopeMultiAgentFormatter(),
-            memory=memory,
+            memory=InMemoryMemory(),
         )
 
     def create_agent_teacher(self):
@@ -396,7 +396,7 @@ async def start_debate(
     factory.suggestion_negative = str((msg.metadata or {}).get("suggestion_negative", ""))
 
     # 双方辩手入场
-    # judge = factory.create_agent_judge()
+    judge = factory.create_agent_judge()
     debater_positive = factory.create_agent_debater_positive()
     debater_nagative = factory.create_agent_debater_negative()
     
@@ -485,8 +485,11 @@ async def start_debate(
     print("="*100)
     msg = await host(msg)
     # print(await host.memory.get_memory())
+    debater_history = host.memory.get_memory()
+    print(debater_history)
+    # judge.memory.load_state_dict(debater_history)
+    
     print("⚖️ 评委宣布结果：")
-    judge = factory.create_agent_judge(host.memory)
     msg = await judge(msg, structured_model=TemplateDebateRusult)
 
     # 返回辩论结果
