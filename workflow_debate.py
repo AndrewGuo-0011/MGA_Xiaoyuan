@@ -29,10 +29,10 @@ class DebateConfig:
     DEBATE_ROUNDS = 4
 
     # 模型配置
-    HOST_MODEL = "qwen-plus-latest"
-    JUDGE_MODEL = "qwq-plus"
-    TEACHER_MODEL = "qwq-plus"
-    DEBATER_MODEL = "qwen-plus"
+    HOST_MODEL = "qwen-plus"
+    JUDGE_MODEL = "qwen-plus"
+    TEACHER_MODEL = "qwen-plus"
+    DEBATER_MODEL = "qwen-plus-latest"
     
 class TemplateGetPOVs(BaseModel):
     """获取正反两方的POVs"""
