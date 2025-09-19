@@ -39,8 +39,8 @@ class GaodePlans:
     mcp = Toolkit()
     mcp.create_tool_group(
         group_name="map_services",
-    description="高德地图服务",
-    active=True,
+        description="高德地图服务",
+        active=True,
     )
     travel_plannotebook = PlanNotebook()
 
@@ -158,8 +158,8 @@ async def generate_travel_plan(query: str):
     tk.register_tool_function(execute_python_code)
     
     # 连接有状态MCP客户端
-    await stateful_client_gaode.connect()
-    await tk.register_mcp_client(stateful_client_gaode)
+    # await stateful_client_gaode.connect()
+    await tk.register_mcp_client(stateless_client_gaode)
 
     agent = ReActAgent(
         name="小徳",
@@ -173,7 +173,7 @@ async def generate_travel_plan(query: str):
         文件保存完后，请在结尾处附上`Travel plan generation done!`
         """,
         model=DashScopeChatModel(
-            model_name="qwen-turbo",
+            model_name="qwen-plus",
             api_key=dashscope_api_key,
             stream=True,
             enable_thinking=False,
