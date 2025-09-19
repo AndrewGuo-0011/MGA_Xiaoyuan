@@ -30,7 +30,7 @@ class DebateConfig:
 
     # 模型配置
     HOST_MODEL = "qwen-plus"
-    JUDGE_MODEL = "qwen-plus"
+    JUDGE_MODEL = "qwen-plus-latest"
     TEACHER_MODEL = "qwen-plus"
     DEBATER_MODEL = "qwen-plus-latest"
     
@@ -508,7 +508,7 @@ async def start_debate(
     
     #评委评定结果
     print("="*100)
-    msg=Msg(name="小元",content="请开始评分环节！",role="user",)
+    msg=Msg(name="小元",content="请主持人引导评委开始评分环节！",role="user",)
     msg = await host(msg)
     # print(await host.memory.get_memory())
     debater_history = host.memory.get_memory()
