@@ -32,7 +32,7 @@ class DebateConfig:
     HOST_MODEL = "qwen-plus-latest"
     JUDGE_MODEL = "qwen-plus-latest"
     TEACHER_MODEL = "qwen-plus-latest"
-    DEBATER_MODEL = "qwen-max-latest"
+    DEBATER_MODEL = "qwen-plus-latest"
     
 class TemplateGetPOVs(BaseModel):
     """获取正反两方的POVs"""
@@ -130,7 +130,7 @@ class AgentFactory:
                 model_name=DebateConfig.DEBATER_MODEL,
                 api_key=_dashscope_api_key,
                 stream=True,
-                enable_thinking=True,
+                enable_thinking=False,
             ),
             formatter=DashScopeMultiAgentFormatter(),
             memory=InMemoryMemory(),
@@ -144,7 +144,7 @@ class AgentFactory:
                 model_name=DebateConfig.DEBATER_MODEL,
                 api_key=_dashscope_api_key,
                 stream=True,
-                enable_thinking=True,
+                enable_thinking=False,
             ),
             formatter=DashScopeChatFormatter(),
             memory=InMemoryMemory(),
@@ -370,12 +370,14 @@ async def start_debate(
             辩论的主题
     """
 
-    # 引导词
-    msg = Msg(
-        name="小元",
-        content=f"请开始一场关于“{debate_subject}”的辩论",
-        role="user",
-    )
+    # # 引导词
+    # msg = Msg(
+    #     name="小元",
+    #     content=f"请开始一场关于“{debate_subject}”的辩论",
+    #     role="user",
+    # )
+
+    msg = None
 
     # 创建辩论需要的所有智能体，包括1个主持人、1个指导老师、2位辩手
     factory = AgentFactory()
@@ -383,14 +385,18 @@ async def start_debate(
     # 主持人分析辩论主题并提取正反双方的主观点
     factory.debate_subject = debate_subject
     host = factory.create_agent_host()
+
     msg = await host(msg, structured_model=TemplateGetPOVs)
+
     print(json.dumps(msg.metadata, indent=4, ensure_ascii=False))
     factory.pov_positive = str((msg.metadata or {}).get("pov_positive", ""))
     factory.pov_negative = str((msg.metadata or {}).get("pov_negative", ""))
 
     # 指导老师为双方辩手分析各自的主观点以及可供参考的主要论点
     teacher = factory.create_agent_teacher()
+
     msg = await teacher(msg, structured_model=TemplateTeacherSuggestion)
+
     print(json.dumps(msg.metadata, indent=4, ensure_ascii=False))
     factory.suggestion_positive = str((msg.metadata or {}).get("suggestion_positive", ""))
     factory.suggestion_negative = str((msg.metadata or {}).get("suggestion_negative", ""))
@@ -404,43 +410,53 @@ async def start_debate(
     # 立论
     # print(f"辩论比赛正式开始！辩论的主题是：{debate_subject}")
     print("="*100)
-    print("🛎️ 主持人发言：")
-    msg = await host(msg)
-    print(f"🔵正方辩手立论：")
-    msg = await debater_positive(msg)
+    # print("🛎️ 主持人发言：")
+    # msg = await host(msg)
+    # print(f"🔵正方辩手立论：")
+    # msg = await debater_positive(msg)
+    # # await judge.observe(msg)
+    # print("🛎️ 主持人发言：")
+    # msg = await host(msg)
+    # print(f"🔴反方辩手立论：")
+    # msg = await debater_nagative(msg)
     # await judge.observe(msg)
-    print("🛎️ 主持人发言：")
-    msg = await host(msg)
-    print(f"🔴反方辩手立论：")
-    msg = await debater_nagative(msg)
-    # await judge.observe(msg)
-    # # Pipeline 语法糖
-    # msg = await sequential_pipeline(
-    #     agents=[host, debater_positive, host, debater_nagative]
-    # )
+    # Pipeline
+    msg = await sequential_pipeline(
+        agents=[host, debater_positive, host, debater_nagative],
+        msg=Msg(
+            name="小元",
+            content=f"教练陈述完毕，双方辩手准备完毕，请主持人开始本场场关于“{debate_subject}”的辩论！",
+            role="user",
+        ),
+    )
     print("\n\n")
 
     # 攻辩
     print("="*100)
-    print("🛎️ 主持人发言：")
-    msg = await host(msg)
-    print(f"🔵正方辩手攻辩：")
-    msg = await debater_positive(msg)
+    # print("🛎️ 主持人发言：")
+    # msg = await host(msg)
+    # print(f"🔵正方辩手攻辩：")
+    # msg = await debater_positive(msg)
+    # # await judge.observe(msg)
+    # print(f"🔴反方辩手回应：")
+    # msg = await debater_nagative(msg)
+    # # await judge.observe(msg)
+    # print("🛎️ 主持人发言：")
+    # msg = await host(msg)
+    # print(f"🔴反方辩手攻辩：")
+    # msg = await debater_nagative(msg)
+    # # await judge.observe(msg)
+    # print(f"🔵正方辩手回应：")
+    # msg = await debater_positive(msg)
     # await judge.observe(msg)
-    print(f"🔴反方辩手回应：")
-    msg = await debater_nagative(msg)
-    # await judge.observe(msg)
-    print("🛎️ 主持人发言：")
-    msg = await host(msg)
-    print(f"🔴反方辩手攻辩：")
-    msg = await debater_nagative(msg)
-    # await judge.observe(msg)
-    print(f"🔵正方辩手回应：")
-    msg = await debater_positive(msg)
-    # await judge.observe(msg)
-    # msg = await sequential_pipeline(
-    #     agents=[host, debater_positive, debater_nagative, host, debater_nagative, debater_positive]
-    # )
+    msg = await sequential_pipeline(
+        agents=[host, debater_positive, debater_nagative, host, debater_nagative, debater_positive],
+        msg=Msg(
+            name="小元",
+            content="请开始第二轮攻辩环节！",
+            role="user",
+        ),
+    )
     print("\n\n")
 
     # 自由辩论
@@ -448,15 +464,20 @@ async def start_debate(
     print("🛎️ 主持人发言：")
     msg = await host(msg)
     for _ in range(DebateConfig.DEBATE_ROUNDS):
-        print(f"🔵正方发言：")
-        msg = await debater_positive(msg)
+        # print(f"🔵正方发言：")
+        # msg = await debater_positive(msg)
+        # # await judge.observe(msg)
+        # print(f"🔴反方发言：")
+        # msg = await debater_nagative(msg)
         # await judge.observe(msg)
-        print(f"🔴反方发言：")
-        msg = await debater_nagative(msg)
-        # await judge.observe(msg)
-        # msg = await sequential_pipeline(
-        #     agents=[debater_positive, debater_nagative]
-        # )
+        msg = await sequential_pipeline(
+            agents=[debater_positive, debater_nagative],
+            msg=Msg(
+                name="小元",
+                content="请开始第三轮自由辩论环节！",
+                role="user",
+            ),
+        )
     print("\n\n")
     
 
@@ -467,27 +488,33 @@ async def start_debate(
     #     content="请主持人引导双方进行总结陈词",
     #     role="user",
     # )
-    print("🛎️ 主持人发言：")
-    msg =  await host(msg)
-    print(f"🔴反方总结：")
-    msg = await debater_nagative(msg)
+    # print("🛎️ 主持人发言：")
+    # msg =  await host(msg)
+    # print(f"🔴反方总结：")
+    # msg = await debater_nagative(msg)
+    # # await judge.observe(msg)
+    # print(f"🔵正方总结：")
+    # msg = await debater_positive(msg)
     # await judge.observe(msg)
-    print(f"🔵正方总结：")
-    msg = await debater_positive(msg)
-    # await judge.observe(msg)
-    # msg = await sequential_pipeline(
-    #     agents = [host, debater_nagative, debater_positive],
-    #     msg = Msg("主持人", "请主持人引导双方进行总结陈词", "user")
-    # )
+    msg = await sequential_pipeline(
+        agents = [host, debater_nagative, debater_positive],
+        msg=Msg(
+            name="小元",
+            content="请开始第四轮总结陈词环节！",
+            role="user",
+        ),
+    )
     print("\n\n")
     
     #评委评定结果
     print("="*100)
+    msg=Msg(name="小元",content="请开始评分环节！",role="user",),
     msg = await host(msg)
     # print(await host.memory.get_memory())
     debater_history = host.memory.get_memory()
     print(debater_history)
     # judge.memory.load_state_dict(debater_history)
+    judge.memory = host.memory
     
     print("⚖️ 评委宣布结果：")
     msg = await judge(msg, structured_model=TemplateDebateRusult)
