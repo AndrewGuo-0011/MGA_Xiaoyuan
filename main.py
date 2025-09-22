@@ -74,7 +74,7 @@ async def main():
         memory=InMemoryMemory(),
         # long_term_memory=long_term_memory,
         # long_term_memory_mode="static_control",
-        formatter=DashScopeMultiAgentFormatter(),
+        formatter=DashScopeChatFormatter(),
         toolkit=toolkit,
     )
 
